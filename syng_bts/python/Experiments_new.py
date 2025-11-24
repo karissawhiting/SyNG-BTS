@@ -46,6 +46,7 @@ def signed_log2(dataset: torch.Tensor) -> torch.Tensor:
 #  Define pilot experiments functions
 def PilotExperiment(
     dataname,
+    data_path=None,
     pilot_size,
     model,
     batch_frac,
@@ -67,6 +68,8 @@ def PilotExperiment(
     ----------
     dataname : string
                pure data name without .csv. Eg: SKCMPositive_4
+    data_path: string
+                path of where data file is located. If NULL, uses current directory as working directory
     pilot_size : list
                  a list including potential pilot sizes
     model : string
@@ -92,8 +95,12 @@ def PilotExperiment(
 
     """
     # read in data
+    if data_path is None:
+        path = f"../RealData/{dataname}.csv"
+    else:
+        path = f"{data_path}/{dataname}.csv"
 
-    path = "../RealData/" + dataname + ".csv"
+    print("Using path:", path)
 
     # just use an if statement for datasets that are already built in
     if dataname == "SKCMPositive_4" and not os.path.exists(path):

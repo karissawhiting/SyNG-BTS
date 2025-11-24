@@ -6,7 +6,7 @@ Created on Sun Mar 27 16:09:21 2022
 @author: yunhui, xinyi
 """
 
-# %% Import libraries
+#  Import libraries
 import torch
 import pandas as pd
 import seaborn as sns
@@ -21,7 +21,29 @@ sns.set()
 import importlib.resources as pkg_resources
 
 
-# %% Define pilot experiments functions
+
+def signed_log2(dataset: torch.Tensor) -> torch.Tensor:
+    """
+    Apply signed log2 transformation to a tensor.
+    Works for positive, zero, and negative values.
+    
+    Formula:
+        y = sign(x) * log2(abs(x) + 1)
+    
+    Parameters:
+    -----------
+    dataset : torch.Tensor
+        Input tensor (can contain negative values)
+    
+    Returns:
+    --------
+    torch.Tensor
+        Signed log2 transformed tensor
+    """
+    return torch.sign(dataset) * torch.log2(torch.abs(dataset) + 1)
+
+
+#  Define pilot experiments functions
 def PilotExperiment(
     dataname,
     pilot_size,
@@ -34,6 +56,7 @@ def PilotExperiment(
     AE_head_num=2,
     Gaussian_head_num=9,
     pre_model=None,
+    apply_log=False
 ):
     r"""
     This function trains VAE or CVAE, or GAN, WGAN, WGANGP, MAF, GLOW, RealNVP with several pilot sizes given data, model, batch_size, learning_rate, epoch, off_aug and pre_model.
@@ -64,6 +87,8 @@ def PilotExperiment(
             how many folds of Gaussianhead augmentation needed. Default value is 9, Only take effect when off_aug == "Gaussian_head"
     pre_model : string
                     transfer learning input model. If pre_model == None, no transfer learning
+    apply_log : boolean
+                    logical whether apply log transformation before training
 
     """
     # read in data
@@ -83,7 +108,12 @@ def PilotExperiment(
     oridata = torch.from_numpy(data_pd.to_numpy()).to(torch.float32)
 
     # log2 transformation
-    oridata = preprocessinglog2(oridata)
+    if apply_log:
+      #  oridata = preprocessinglog2(oridata)
+        oridata = signed_log2(oridata)
+        
+
+  #  oridata = preprocessinglog2(oridata)
     n_samples = oridata.shape[0]
 
     # get group information if there is or is not
@@ -482,7 +512,7 @@ def PilotExperiment(
                 print("wait for other models")
 
 
-# %% Define application of experiment
+#  Define application of experiment
 def ApplyExperiment(
     path,
     dataname,
@@ -561,8 +591,13 @@ def ApplyExperiment(
         data_pd = data_pd.drop(columns=["groups"])
     oridata = torch.from_numpy(data_pd.to_numpy()).to(torch.float32)
     colnames = data_pd.columns
+    # log2 transformation
     if apply_log:
-        oridata = preprocessinglog2(oridata)
+      #  oridata = preprocessinglog2(oridata)
+        oridata = signed_log2(oridata)
+        
+
+  #  oridata = preprocessinglog2(oridata)
     n_samples = oridata.shape[0]
     if "groups" in dat_pd.columns:
         groups = dat_pd["groups"]
@@ -848,7 +883,7 @@ def ApplyExperiment(
         print("wait for other models")
 
 
-# %% Define transfer learing
+#  Define transfer learing
 def TransferExperiment(
     pilot_size,
     fromname,
